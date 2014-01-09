@@ -12,6 +12,14 @@ include __DIR__ .'/controller/get_text_controller.php';
 // set up the Textus slug API
 add_action('init', 'register_textus');
 
+//Textus Javascript functions
+
+register_textus_viewer();
+add_action('wp_register_scripts','enqueue_textus_viewer');
+
+
+/* Wordpress Textus functions */
+
 /**
  * Function to create a "slug" for the Textus Javascript / HTML
  */
@@ -70,7 +78,7 @@ function textus_shortcode( $atts ) {
     return '<div id="raw">
 '.$rawtext.'
 </div>
-<script src="textus-viewer.js"></script>
+<script src="/vendor/textus-viewer.js"></script>
 <script type="text/javascript">
 var textusTypography = typography;
 // now boot textus viewer
@@ -93,5 +101,40 @@ function textus_get_text($id) {
         return $text['text'];
     }
 }
+
+
+/* Javascript functions*/
+
+function fetch_textus_vendor() {
+    // list all vendor files
+    $jsfiles = scandir(__DIR__ . '/textus-viewer/vendor');
+    return (empty($jsfiles)) ? array('error in fetching files') : $jsfiles;
+}
+
+/**
+*  Function to register the Textus JS functions in Wordpress
+*  and load after the jquery, backbone or underscore
+*/
+function register_textus_viewer() {
+    $jsfiles = fetch_textus_vendor();
+    $url = plugins_url('', dirname(__FILE__));
+    foreach ($jsfiles as $js) {
+      if ($js != '.' || $js != '..') {
+        $jsfsplit = split('/', $js);
+        wp_register_script( substr(end($jsfsplit), 0,-3), plugins_url("textus-viewer/vendor/".$js, dirname(__FILE__)), $dependencies, $version, $load_in_footer );
+        wp_enqueue_script( substr(end($jsfsplit), 0,-3));
+      }
+    }
+    //$dependencies = array('jquery, backbone', 'underscore');
+    wp_register_script( 'textus-main', plugins_url("textus-viewer/js/main.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
+    wp_enqueue_script( 'textus-main');
+    wp_register_script( 'textus-routes', plugins_url("textus-viewer/js/routers.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
+    wp_enqueue_script( 'textus-routes');
+    //array_push($dependencies, array('textus-viewer', 'textus-routes'));
+    //array_push('textus-routes', $dependencies);
+    wp_register_script( 'textus-reader', plugins_url("textus-viewer/js/activity/readTextActivity.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
+    wp_enqueue_script( 'textus-reader');
+}
+
 
 ?>
