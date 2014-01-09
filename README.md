@@ -2,10 +2,17 @@
 
 This is a simple plugin that embeds a Textus Viewer instance into a Wordpress plugin. 
 
+### Dependencies
+
+This plugin depends on the Textus Viewer code (https://github.com/okfn/textus-viewer). 
+
+The code then needs to be put into the textus-viewer directory in the textus-wordpress directory
+so that it can be included correctly. 
+
 #### Textus Short Code
 It creates a custom Textus type that corresponds to a shortcode that calls the file. 
 
-    [textus id="\<insert file name\>"]
+    [textus id="<insert file name>"]
 
 The file name must be the name of file to be retrieved from the backend. At the moment this assumed to be in form "author/normalised text name".
 
