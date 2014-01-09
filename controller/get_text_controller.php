@@ -7,6 +7,8 @@
 include __DIR__.'/../encode.php';
 include __DIR__.'/../dao.php';
 
+include __DIR__.'/../storage/filesys.inc';
+
 class get_text_controller {
 	
 	public function __construct() {}
@@ -21,11 +23,13 @@ class get_text_controller {
 	 *    String of the variables for the view
 	 *
 	 */
-	public function ol_get_text ($incomingdata) {
+	public function ol_get_text ($incomingdata, $type) {
 		$response = array();
 
 		$explodeincoming = explode('/', $incomingdata);
-		return self::ol_get_complete_text($incomingdata);
+                $fs = new FS();
+		return ($type == "text") ? self::ol_get_complete_text($incomingdata, $fs)
+                    : self::ol_get_text_markup($incomingdata, $fs);
 	}
 	
 	/**
@@ -65,15 +69,30 @@ class get_text_controller {
 	 * @param string textid - the text id to signify the
 	 * @return string - JSON encoded text string
 	 */
-	function ol_get_complete_text($textid)
+	function ol_get_complete_text($textid, $fs)
 	{
-		include __DIR__.'/../storage/filesys.inc';
+		
 		//need some error handling
-	    $fs = new FS();
-		$textstr = '';
+	    
 		if ($textid) {
 			// If the textid isn't empty, then get the complete file.
-			return $fs->ol_get_file($textid);
+			return $fs->ol_get_file($textid.'-text.txt');
+		}
+	}
+
+	/**
+	 * Function to get the text from the store.
+	 * Returns the marked up JSON text.
+	 *
+	 * @param string textid - the text id to signify the
+	 * @return string - JSON encoded text string
+	 */
+	function ol_get_text_markup($textid, $fs)
+	{
+		//need some error handling
+		if ($textid) {
+			// If the textid isn't empty, then get the complete file.
+			return $fs->ol_get_file($textid.'-typography.json');
 		}
 	}
 }

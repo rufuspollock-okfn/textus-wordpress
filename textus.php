@@ -73,7 +73,9 @@ function textus_shortcode( $atts ) {
       $atts)
     );
     
-    $rawtext = textus_get_text($id);
+    $rawtext = textus_get_text($id, 'text');   
+    $rawjson = textus_get_text($id, 'json');
+
     // return the text with the call the the Javascript location
     return '<div id="raw">
 '.$rawtext.'
@@ -82,7 +84,7 @@ function textus_shortcode( $atts ) {
 <script type="text/javascript">
 var textusTypography = typography;
 // now boot textus viewer
-viewer = new Viewer(rawText, typography);
+viewer = new Viewer('.$rawtext.', '.$rawjson.');
 </script>
 </pre>';
 }
@@ -91,9 +93,9 @@ add_shortcode('textus', 'textus_shortcode');
 /**
  * Function to get the requested text
  */
-function textus_get_text($id) {
+function textus_get_text($id, $type) {
     $request = new get_text_controller();
-    $text = $request->ol_get_text($id);
+    $text = $request->ol_get_text($id, $type);
     if ($text['error']) {
         return $text['error'];
     }
@@ -128,7 +130,7 @@ function register_textus_viewer() {
     //$dependencies = array('jquery, backbone', 'underscore');
     wp_register_script( 'textus-main', plugins_url("textus-viewer/js/main.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
     wp_enqueue_script( 'textus-main');
-    wp_register_script( 'textus-routes', plugins_url("textus-viewer/js/routers.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
+    wp_register_script( 'textus-routes', plugins_url("textus-viewer/js/router.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
     wp_enqueue_script( 'textus-routes');
     //array_push($dependencies, array('textus-viewer', 'textus-routes'));
     //array_push('textus-routes', $dependencies);
