@@ -123,7 +123,6 @@ function register_textus_viewer() {
     foreach ($jsfiles as $js) {
       if ($js != '.' && $js != '..') {
         $jsfsplit = split('/', $js);
-print "<p>".substr(end($jsfsplit), 0,-3)." </p>";
         wp_register_script( substr(end($jsfsplit), 0,-3), plugins_url("/textus-wordpress/textus-viewer/vendor/$js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
         // hacky but good reminder for later integration
         if (substr(end($jsfsplit), 0,-3) != "jquery-1.7.2" && substr(end($jsfsplit), 0,-3) != "jquery.ui-1.8.22") {
