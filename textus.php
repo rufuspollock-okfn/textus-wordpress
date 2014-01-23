@@ -25,7 +25,7 @@ add_action('wp_register_scripts','enqueue_textus_viewer');
  */
 function register_textus()
 {
-    $labels = array(
+    $label = array(   
             'name' => _x('Textus', 'post type general name'),
             'singular_name' => _x('Textus Item', 'post type singular name'),
             'add_new' => _x('Add New', 'textus item'),
@@ -87,7 +87,7 @@ var textusTypography = typography;
 viewer = new Viewer('.$rawtext.', '.$rawjson.');
 </script>
 </pre>';
-}
+} 
 add_shortcode('textus', 'textus_shortcode');
 
 /**
@@ -121,20 +121,24 @@ function register_textus_viewer() {
     $jsfiles = fetch_textus_vendor();
     $url = plugins_url('', dirname(__FILE__));
     foreach ($jsfiles as $js) {
-      if ($js != '.' || $js != '..') {
+      if ($js != '.' && $js != '..') {
         $jsfsplit = split('/', $js);
-        wp_register_script( substr(end($jsfsplit), 0,-3), plugins_url("textus-viewer/vendor/".$js, dirname(__FILE__)), $dependencies, $version, $load_in_footer );
-        wp_enqueue_script( substr(end($jsfsplit), 0,-3));
+print "<p>".substr(end($jsfsplit), 0,-3)." </p>";
+        wp_register_script( substr(end($jsfsplit), 0,-3), plugins_url("/textus-wordpress/textus-viewer/vendor/$js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
+        // hacky but good reminder for later integration
+        if (substr(end($jsfsplit), 0,-3) != "jquery-1.7.2" && substr(end($jsfsplit), 0,-3) != "jquery.ui-1.8.22") {
+          wp_enqueue_script( substr(end($jsfsplit), 0,-3));
+        }
       }
     }
     //$dependencies = array('jquery, backbone', 'underscore');
-    wp_register_script( 'textus-main', plugins_url("textus-viewer/js/main.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
+    wp_register_script( 'textus-main', plugins_url("textus-wordpress/textus-viewer/js/main.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
     wp_enqueue_script( 'textus-main');
-    wp_register_script( 'textus-routes', plugins_url("textus-viewer/js/router.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
+    wp_register_script( 'textus-routes', plugins_url("textus-wordpress/textus-viewer/js/router.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
     wp_enqueue_script( 'textus-routes');
     //array_push($dependencies, array('textus-viewer', 'textus-routes'));
     //array_push('textus-routes', $dependencies);
-    wp_register_script( 'textus-reader', plugins_url("textus-viewer/js/activity/readTextActivity.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
+    wp_register_script( 'textus-reader', plugins_url("textus-wordpress/textus-viewer/js/activity/readTextActivity.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
     wp_enqueue_script( 'textus-reader');
 }
 
