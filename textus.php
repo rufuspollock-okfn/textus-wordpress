@@ -167,7 +167,8 @@ function is_server()
 /**
 * Registered function which acts as an API for the textus viewer
 * @param the GET url
-*  Looks for the 
+*  Looks for the text and type parameters
+*  @todo check if the values are always ints from the Textus
 *
 */
 function textus_get_control()
@@ -181,7 +182,7 @@ function textus_get_control()
          case 'GET':
                         $request = new get_text_controller();
                         $parse = parse_parameters();
-                        $response = ($_GET['type'] == "text") ? $request->ol_get_text($parse, 'text') : $request->ol_get_text($parse, 'typo');
+                        $response = ($_GET['type'] == "text") ? $request->ol_get_text($parse['text'], 'text') : $request->ol_get_text($parse['text'], 'typo');
             return_response($response);
                         break;
                 /*case 'POST':
