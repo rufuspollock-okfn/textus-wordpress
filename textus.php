@@ -10,13 +10,14 @@ Author URI: http://www.openliterature.net
 include __DIR__ .'/controller/get_text_controller.php';
 
 // set up the Textus slug API
-add_action('init', 'register_textus');
+//add_action('init', 'register_textus');
 
 //Textus Javascript functions
+//register_textus_viewer();
+//add_action('wp_register_scripts','enqueue_textus_viewer');
 
-register_textus_viewer();
-add_action('wp_register_scripts','enqueue_textus_viewer');
-
+//Set up the Textus API
+add_action('init', 'textus_get_control');
 
 /* Wordpress Textus functions */
 
@@ -139,6 +140,122 @@ function register_textus_viewer() {
     //array_push('textus-routes', $dependencies);
     wp_register_script( 'textus-reader', plugins_url("textus-wordpress/textus-viewer/js/activity/readTextActivity.js", dirname(__FILE__)), $dependencies, $version, $load_in_footer );
     wp_enqueue_script( 'textus-reader');
+}
+
+
+/* Textus API */
+function is_server()
+{
+        $server = false;
+        switch($_SERVER['REQUEST_METHOD']) {
+                case 'GET':
+                        if (isset($_GET['text']) ) {
+                                $server = true;
+                        }
+                        break;
+                /*case 'POST':
+                        //needs testing against the textus code
+                        $server = true;
+                        break;*/
+                default:
+                        wp_send_json(array("error" =>"Term not supported"));
+                        break;
+        }
+        return $server;
+}
+
+/**
+* Registered function which acts as an API for the textus viewer
+* @param the GET url
+*  Looks for the 
+*
+*/
+function textus_get_control()
+{
+        global $urllink;
+
+        if (is_server()) {
+                
+         // Load the relevant controller that contains the methods/
+         switch($_SERVER['REQUEST_METHOD']) {
+         case 'GET':
+                        $request = new get_text_controller();
+                        $parse = parse_parameters();
+                        $response = ($_GET['type'] == "text") ? $request->ol_get_text($parse, 'text') : $request->ol_get_text($parse, 'typo');
+            return_response($response);
+                        break;
+                /*case 'POST':
+                        include (__DIR__.'/controller/post_controller.php');
+                        //@todo get the vars which the textus viewer sets
+                        $textid = parse_parameters();
+                        $request = new post_controller();
+            $response = $request->set_text($textid);
+                        break;*/
+                default:
+                        $parse = self::parse_parameters();
+                        if ($parse['action'] == 'json') {
+                                return wp_send_json( array ('error' => 'Method is unsupported') );
+                        }
+                        break;
+        }
+        }
+}
+
+/**
+* Function to parse the parameters.
+* If the request method is get, then use the parse_str() to parse them
+*
+* Else take the input stream
+*/
+function parse_parameters()
+{
+        $parameters = array();
+        $body_params = array();
+        //if we get a GET, then parse the query string
+        if($_SERVER['REQUEST_METHOD'] == 'GET') {
+                if (isset($_SERVER['QUERY_STRING'])) {
+                        $body_params = parse_str($_SERVER['QUERY_STRING'], $parameters);
+                }
+        } else {
+                // Otherwise it is POST, PUT or DELETE.
+                // At the moment, we only deal with JSON
+                /*$data = file_get_contents("php://input");
+                $body_params = json_decode($data);*/
+        }
+
+        foreach ($body_params as $field => $value) {
+                $parameters[$field]= $value;
+        }
+        return $parameters;
+}
+
+/**
+* Function to return the response given by the controller.
+*
+* @param Array $response_data
+* Array of the data returned by the system
+* @return String
+* Response string depending on request type - JSON or HTML
+*/
+function return_response ($response_data) {
+        // If the format is JSON, then send JSON else load the correct template
+        //if ($response_data['format'] == 'json') {
+         if (array_key_exists('error', $response_data)) {
+                 return wp_send_json($response_data);
+         }
+         else {
+           return wp_send_json($response_data);
+         }
+        /*}
+        else {
+                if (array_key_exists('error', $response_data)) {
+                        add_action('template_include', ol_set_template('error'));
+                }
+                else {
+                        add_action('template_include', ol_set_template($parse['action']));
+                }
+        
+        }*/
 }
 
 
