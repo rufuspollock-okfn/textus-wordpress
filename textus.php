@@ -18,7 +18,7 @@ add_action('init', 'register_textus');
 
 //Set up the Textus API
 add_action('init', 'textus_get_control');
-add_action('init', 'textus_shortcode');
+add_shortcode('textus', 'textus_shortcode');
 
 /* Wordpress Textus functions */
 
@@ -83,14 +83,15 @@ function textus_shortcode( $atts ) {
 </div>
 <script src="/vendor/textus-viewer.js"></script>
 <script type="text/javascript">
-var textusTypography = '.$rawjson.';
-var textUrl = '.$rawtext.';
+var textusTypography = "'.$rawjson.'";
+var textUrl = "'.$rawtext.'";
 var apiUrl = "";
-viewer = new Viewer(textUrl, textusTypography, apiUrl );
+var currentUser = { id : '.get_current_user_id().'};
+viewer = new Viewer(textUrl, textusTypography, apiUrl, currentUser);
 </script>
 </pre>';
 } 
-add_shortcode('textus', 'textus_shortcode');
+
 
 /**
  * Function to get the requested text
@@ -261,6 +262,45 @@ function return_response ($response_data) {
                 }
         
         }*/
+}
+
+/* Wordpress DB functions */
+
+/**
+*  Functions to install a table for the annotations in Wordpress
+*
+*/
+function textus_install() {
+   global $wpdb;
+   // name it as like the other WP tablesbut addd textus so it can be quickly found
+    $table_name = $wpdb->prefix . "textus_annotations"; 
+	/*
+	"start" : 300,
+	"end" : 320,
+	"type" : "textus:comment",
+	"userid" : [wordpress-id]
+	"private": false
+	"date" : "2010-10-28T12:34Z",
+	"payload" : {
+	    "lang" : "en"
+	    "text" : "Those twenty characters really blow me away, man..."
+	} */
+   $sql = "CREATE TABLE $table_name (
+     id mediumint(9) NOT NULL AUTO_INCREMENT,
+     time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+     start smallint NOT NULL,
+     end  smallint NOT NULL,
+     userid  smallint NOT NULL,
+     private tinytext NOT NULL,
+     type text NOT NULL,
+     text text NOT NULL,
+     url VARCHAR(55) DEFAULT '' NOT NULL,
+     UNIQUE KEY id (id)
+   );";
+
+   require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+  dbDelta( $sql );
+
 }
 
 
