@@ -20,6 +20,9 @@ add_action('init', 'register_textus');
 add_action('init', 'textus_get_control');
 add_shortcode('textus', 'textus_shortcode');
 
+// function to create annotation table
+register_activation_hook( __FILE__, 'textus_install' );
+
 /* Wordpress Textus functions */
 
 /**
@@ -272,7 +275,7 @@ function return_response ($response_data) {
 */
 function textus_install() {
    global $wpdb;
-   // name it as like the other WP tablesbut addd textus so it can be quickly found
+   // name it as like the other WP tables but add textus so it can be quickly found
     $table_name = $wpdb->prefix . "textus_annotations"; 
 	/*
 	"start" : 300,
@@ -284,17 +287,20 @@ function textus_install() {
 	"payload" : {
 	    "lang" : "en"
 	    "text" : "Those twenty characters really blow me away, man..."
-	} */
+	} 
+
+       id will be int of the currently logged in user. 
+*/
    $sql = "CREATE TABLE $table_name (
      id mediumint(9) NOT NULL AUTO_INCREMENT,
+     textid mediumint(9) NOT NULL, 
      time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
      start smallint NOT NULL,
      end  smallint NOT NULL,
      userid  smallint NOT NULL,
      private tinytext NOT NULL,
-     type text NOT NULL,
+     language tinytext NOT NULL, 
      text text NOT NULL,
-     url VARCHAR(55) DEFAULT '' NOT NULL,
      UNIQUE KEY id (id)
    );";
 
@@ -303,5 +309,77 @@ function textus_install() {
 
 }
 
+/**
+*  Function to insert the annotation into the table
+* 
+*
+*  return int
+*  returns the number of rows affected. Should only be 1. If not, the calling function needs to throw an error.
+*/
+function textus_db_insert_annotation($id, $time, $start, $end, $userid, $private, $lang, $text)
+{
+    global $wpdb;
+   $rows_affected = $wpdb->insert( $table_name, array( 'time' => current_time('mysql'), 'name' => $welcome_name, 'text' => $welcome_text ) );
+    return $rows_affected;
+}
+
+/**
+*  Function to get the text annotations for a given id
+*
+*  @param textid
+*  The text id given from the API
+*
+*  @return array
+*  Returns an array of the annotations to be jsonified later
+*/
+function text_get_annotations($textid)
+{
+   global $currentuser;
+    $annotations = array();
+   if (!$textid) {
+     return wp_error("No text id was given");
+   }
+
+   $notes = textus_db_select_annotations($textid);
+   if (!$notes)
+   {
+      //actually do we want to return an empty JSON message?
+      $annotations = array('error' => 'No annotations could be found for this text' );
+   } else {
+     foreach ($notes as $note)
+     {
+         // put the notes into the correct structure
+         $annotations = array(
+            "start" => $note->start, 
+            "end" => $note->end, 
+            "time" => $note->time, 
+            "private" => $note->private, 
+            "payload" => array("language" => $note->language, 
+                               "text" => $note->text)
+                         );
+     }
+   }
+   return $annotations;
+}
+
+/**
+*   Function to get the annotations from the store
+*/
+function textus_db_select_annotation($textid)
+{
+  if (!$textid) {
+     return wp_error("No text id was given");
+  }
+  $notes = $wpdb->get_results( "textus_annotations", 
+   "SELECT start, end, time, userid, private, language, text
+    FROM " . $wpdb->prefix . "textus_annotations
+    WHERE textid=".$textid;
+  );
+
+   if ($notes) 
+   {
+      return $notes;
+   }
+}
 
 ?>
