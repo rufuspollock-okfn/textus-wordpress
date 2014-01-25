@@ -59,7 +59,7 @@ class FS {
 		//if pass, then calls the wp_filesystem global to run operation
 		global $wp_filesystem;
 		//get the real path and the file system
-		$fname = self::ol_get_upload_directory().$filename . '.json';
+		$fname = self::ol_get_upload_directory().$filename;
 		$writable = WP_Filesystem( FALSE, 'direct' );
 		/*if (! $writable) {
 			return "{ error : This filename cannot be loaded }";
@@ -69,7 +69,7 @@ class FS {
 		if ( !$file ) {
 			return array('error' => 'The file does not exist');
 		} else {
-			return array( 'text' => $file);
+			return array('data' => $file);
 		}
 		//@todo needs error handling - return http error and write to log
 	}

@@ -10,7 +10,7 @@ Author URI: http://www.openliterature.net
 include __DIR__ .'/controller/get_text_controller.php';
 
 // set up the Textus slug API
-//add_action('init', 'register_textus');
+add_action('init', 'register_textus');
 
 //Textus Javascript functions
 //register_textus_viewer();
@@ -18,6 +18,7 @@ include __DIR__ .'/controller/get_text_controller.php';
 
 //Set up the Textus API
 add_action('init', 'textus_get_control');
+add_action('init', 'textus_shortcode');
 
 /* Wordpress Textus functions */
 
@@ -76,16 +77,16 @@ function textus_shortcode( $atts ) {
     
     $rawtext = textus_get_text($id, 'text');   
     $rawjson = textus_get_text($id, 'json');
-
     // return the text with the call the the Javascript location
     return '<div id="raw">
 '.$rawtext.'
 </div>
 <script src="/vendor/textus-viewer.js"></script>
 <script type="text/javascript">
-var textusTypography = typography;
-// now boot textus viewer
-viewer = new Viewer('.$rawtext.', '.$rawjson.');
+var textusTypography = '.$rawjson.';
+var textUrl = '.$rawtext.';
+var apiUrl = "";
+viewer = new Viewer(textUrl, textusTypography, apiUrl );
 </script>
 </pre>';
 } 
@@ -97,11 +98,12 @@ add_shortcode('textus', 'textus_shortcode');
 function textus_get_text($id, $type) {
     $request = new get_text_controller();
     $text = $request->ol_get_text($id, $type);
+
     if ($text['error']) {
         return $text['error'];
     }
     else{
-        return $text['text'];
+        return $text['data'];
     }
 }
 
@@ -215,7 +217,9 @@ function parse_parameters()
         //if we get a GET, then parse the query string
         if($_SERVER['REQUEST_METHOD'] == 'GET') {
                 if (isset($_SERVER['QUERY_STRING'])) {
-                        $body_params = parse_str($_SERVER['QUERY_STRING'], $parameters);
+                        // make this more defensive
+                        return $_GET;
+
                 }
         } else {
                 // Otherwise it is POST, PUT or DELETE.
@@ -245,7 +249,7 @@ function return_response ($response_data) {
                  return wp_send_json($response_data);
          }
          else {
-           return wp_send_json($response_data);
+           return wp_send_json(array("data"=>$response_data));
          }
         /*}
         else {
