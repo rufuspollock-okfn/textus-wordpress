@@ -185,12 +185,17 @@ function textus_get_control()
                 
          // Load the relevant controller that contains the methods/
          switch($_SERVER['REQUEST_METHOD']) {
-         case 'GET':
-                        $request = new get_text_controller();
-                        $parse = parse_parameters();
-                        $response = ($_GET['type'] == "text") ? $request->ol_get_text($parse['text'], 'text') : $request->ol_get_text($parse['text'], 'typo');
-            return_response($response);
-                        break;
+           case 'GET':
+               $request = new get_text_controller();
+               $parse = parse_parameters();
+               if ( $_GET['type'] == 'annotation' ) {
+                  if (intval($_GET['text'])) {
+                     return_response(array("status"=>200, "notes"=>textus_get_annotations($_GET['text'])));
+                  } else {
+                     return_response(array("status" => 403, "error"=>"You need to specify a text"));
+                  }
+                }
+                break;
                 /*case 'POST':
                         include (__DIR__.'/controller/post_controller.php');
                         //@todo get the vars which the textus viewer sets
@@ -198,14 +203,14 @@ function textus_get_control()
                         $request = new post_controller();
             $response = $request->set_text($textid);
                         break;*/
-                default:
-                        $parse = self::parse_parameters();
-                        if ($parse['action'] == 'json') {
-                                return wp_send_json( array ('error' => 'Method is unsupported') );
-                        }
-                        break;
+           default:
+             $parse = parse_parameters();
+             if ($parse['action'] == 'json') {
+                 return wp_send_json( array ('error' => 'Method is unsupported') );
+             }
+             break;
         }
-        }
+   }
 }
 
 /**
@@ -253,7 +258,7 @@ function return_response ($response_data) {
                  return wp_send_json($response_data);
          }
          else {
-           return wp_send_json(array("data"=>$response_data));
+           return wp_send_json($response_data);
          }
         /*}
         else {
@@ -332,15 +337,15 @@ function textus_db_insert_annotation($id, $time, $start, $end, $userid, $private
 *  @return array
 *  Returns an array of the annotations to be jsonified later
 */
-function text_get_annotations($textid)
+function textus_get_annotations($textid)
 {
    global $currentuser;
     $annotations = array();
    if (!$textid) {
-     return wp_error("No text id was given");
+     return wp_send_json("No text id was given");
    }
 
-   $notes = textus_db_select_annotations($textid);
+   $notes = textus_db_select_annotation($textid);
    if (!$notes)
    {
       //actually do we want to return an empty JSON message?
@@ -349,14 +354,15 @@ function text_get_annotations($textid)
      foreach ($notes as $note)
      {
          // put the notes into the correct structure
-         $annotations = array(
+         $annotations[] = array(
             "start" => $note->start, 
             "end" => $note->end, 
             "time" => $note->time, 
             "private" => $note->private, 
-            "payload" => array("language" => $note->language, 
-                               "text" => $note->text)
-                         );
+            "payload" => array(
+               "language" => $note->language, 
+               "text" => $note->text)
+            );
      }
    }
    return $annotations;
@@ -367,13 +373,14 @@ function text_get_annotations($textid)
 */
 function textus_db_select_annotation($textid)
 {
+  global $wpdb;
   if (!$textid) {
-     return wp_error("No text id was given");
+     return wp_send_json(array("status"=>500, "error"=>"No text id was given"));
   }
-  $notes = $wpdb->get_results( "textus_annotations", 
+  $notes = $wpdb->get_results( 
    "SELECT start, end, time, userid, private, language, text
     FROM " . $wpdb->prefix . "textus_annotations
-    WHERE textid=".$textid;
+    WHERE textid='$textid'"
   );
 
    if ($notes) 
