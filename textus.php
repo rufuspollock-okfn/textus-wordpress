@@ -196,13 +196,12 @@ function textus_get_control()
                   }
                 }
                 break;
-                /*case 'POST':
-                        include (__DIR__.'/controller/post_controller.php');
-                        //@todo get the vars which the textus viewer sets
-                        $textid = parse_parameters();
-                        $request = new post_controller();
-            $response = $request->set_text($textid);
-                        break;*/
+            case 'POST':
+              //@todo get the vars which the textus viewer sets
+              $textid = parse_parameters();
+              $request = new post_controller();
+              $response = $request->set_text($textid);
+              break;
            default:
              $parse = parse_parameters();
              if ($parse['action'] == 'json') {
@@ -225,11 +224,10 @@ function parse_parameters()
         $body_params = array();
         //if we get a GET, then parse the query string
         if($_SERVER['REQUEST_METHOD'] == 'GET') {
-                if (isset($_SERVER['QUERY_STRING'])) {
-                        // make this more defensive
-                        return $_GET;
-
-                }
+          if (isset($_SERVER['QUERY_STRING'])) {
+            // make this more defensive
+             return $_GET;
+          }
         } else {
                 // Otherwise it is POST, PUT or DELETE.
                 // At the moment, we only deal with JSON
@@ -260,16 +258,6 @@ function return_response ($response_data) {
          else {
            return wp_send_json($response_data);
          }
-        /*}
-        else {
-                if (array_key_exists('error', $response_data)) {
-                        add_action('template_include', ol_set_template('error'));
-                }
-                else {
-                        add_action('template_include', ol_set_template($parse['action']));
-                }
-        
-        }*/
 }
 
 /* Wordpress DB functions */
