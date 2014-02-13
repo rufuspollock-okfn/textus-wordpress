@@ -7,6 +7,7 @@ Author: OKFN
 Version: 0.1
 Author URI: http://www.openliterature.net
 */
+ini_set("allow_url_fopen", true);
 include __DIR__ .'/controller/get_text_controller.php';
 
 // set up the Textus slug API
@@ -146,7 +147,7 @@ function textus_get_control()
          switch($_SERVER['REQUEST_METHOD']) {
            case 'GET':
                $request = new get_text_controller();
-               $parse = parse_parameters();
+               //$parse = parse_parameters();
                if ( $_GET['type'] == 'annotation' ) {
                   if (intval($_GET['text'])) {
                      return_response(array("status"=>200, "notes"=>textus_get_annotations($_GET['text'])));
@@ -156,24 +157,36 @@ function textus_get_control()
                 }
                 break;
             case 'POST':
+              //$post = file_get_contents("php://input");
+              $textid = json_decode(file_get_contents("php://input"), TRUE);
               //@todo get the vars which the textus viewer sets
-              $textid = parse_parameters($_POST);
+              //$textid = parse_parameters($post);
+              
               // returns the new noteid
-              $noteid = textus_insert_annotation($_POST['time'], 
-                $_POST['start'], $_POST['end'], 
-                $_POST['userid'], $_POST['private'], 
-                $_POST['lang'], $_POST['text']
+              $noteid = textus_insert_annotation($textid['time'], 
+                $textid['start'], $textid['end'], 
+                $textid['userid'], $textid['private'], 
+                $textid['payload']['lang'], $textid['payload']['text']
               );
+
+              if (intval($noteid) > 0) {
+                 return_response(array("status" => 200, "note"=>"The note has been stored"));
+              } else {
+                 return_response(array("status" => 403, "note"=>"The note could not updated"));
+              }
+              
               break;
             case 'PUT':
               //@todo get the vars which the textus viewer sets
               $textid = parse_parameters();
               // returns the new noteid
+break;
               $noteid = textus_insert_annotation($_POST['id'], $_POST['time'], 
                 $_POST['start'], $_POST['end'], 
                 $_POST['userid'], $_POST['private'], 
                 $_POST['lang'], $_POST['text']
               );
+              
               break;
            default:
              $parse = parse_parameters();
@@ -191,7 +204,7 @@ function textus_get_control()
 *
 * Else take the input stream
 */
-function parse_parameters()
+function parse_parameters($data)
 {
         $parameters = array();
         $body_params = array();
@@ -202,10 +215,12 @@ function parse_parameters()
              return $_GET;
           }
         } else {
+                print "data $data \n";
                 // Otherwise it is POST, PUT or DELETE.
                 // At the moment, we only deal with JSON
-                /*$data = file_get_contents("php://input");
-                $body_params = json_decode($data);*/
+                //$data = file_get_contents("php://input");
+                $body_params = json_decode($data, TRUE);
+                print_r($body_params);
         }
 
         foreach ($body_params as $field => $value) {
@@ -283,10 +298,8 @@ function textus_install() {
 */
 function textus_insert_annotation($start, $end, $userid, $private, $lang, $text) {
   $rows = textus_db_insert_annotation($start, $end, $userid, $private, $lang, $text);
-  if ($rows)
-  {
-    return $rows;
-  }
+  return ($rows) ? $rows : false;
+ 
 }
 
 /**
@@ -310,10 +323,23 @@ function textus_updates_annotation($id, $time, $start, $end, $userid, $private, 
 *  return int
 *  returns the number of rows affected. Should only be 1. If not, the calling function needs to throw an error.
 */
-function textus_db_insert_annotation($start, $end, $userid, $private, $lang, $text)
+function textus_db_insert_annotation($start, $end, $userid, $private, $lang, $text, $textid)
 {
     global $wpdb;
-   $rows_affected = $wpdb->insert( $table_name, array( 'time' => current_time('mysql'), 'name' => $welcome_name, 'text' => $welcome_text ) );
+
+    $table_name = $wpdb->prefix . "textus_annotations"; 
+
+   $rows_affected = $wpdb->insert( $table_name, 
+     array( 
+       'textid' => $textid,
+       'start' => $start, 
+       'end' => $end, 
+       'userid' => $userid,
+       'private' => $private,
+       'language' => $lang,
+       'text' => $text
+        ) 
+      );
     return $rows_affected;
 }
 
