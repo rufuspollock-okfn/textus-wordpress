@@ -26,8 +26,9 @@ This is only the initial version of the plugin, please check the list of issues 
 The API format is JSON. 
 
 POST
-
-{"textid": integer of the text id being retrieved, 
+Request:
+{
+ "textid": integer of the text id being retrieved, 
  "start":integer of the start co-ordinate, 
  "end": integer of the end co-ordinate, 
  "private": either "true" or "false". Must be a string, 
@@ -36,5 +37,33 @@ POST
     "text": String. The note's body
   }, 
   "name": String. The public name of the account. 
+}
+Response
+{
+  "status": Integer. HTTP Status code. 200 for success.
+   "note" : String. Description.
+
+GET
+
+Request: ?text=1&type=annotation
+
+Response
+{
+
+    "status": Integer. HTTP Status code,
+    "notes": [
+        {
+            "start": Integer. Start co-ordinate,
+            "end": Integer. End co-ordinate,
+            "time": String. The date in MySQL,
+            "private": String. True or false,
+            "payload": {
+                "language": String. Language code for the note,
+                "text": String. The note
+            }
+        },
+
+    ]
+
 }
 
