@@ -188,12 +188,28 @@ function textus_get_control()
               // returns the new noteid
               $name = textus_db_get_id($textid['name']);
               //$userid, $id, $start, $end, $private, $lang, $text, $noteid
+
               $noteid = textus_updates_annotation(
                  $name, $textid['textid'], 
                 $textid['start'], $textid['end'], 
                 $textid['private'], 
                 $textid['payload']['language'], $textid['payload']['text'], $textid['id']);
-              
+                            
+              if (intval($noteid) > 0 ) {
+                  return_response(array("status"=> 200, "notes" => $textid['id'] + " has been updated"));
+              }
+              break;
+            case 'DELETE':
+             
+              //@todo get the vars which the textus viewer sets
+              $textid = json_decode(file_get_contents("php://input"), TRUE);
+              // returns the new noteid
+              $name = textus_db_get_id($textid['name']);
+              //$userid, $id, $start, $end, $private, $lang, $text, $noteid
+              $noteid = textus_delete_annotation($textid['id']);
+              if (intval($noteid) > 0 ) {
+                  return_response(array("status"=> 200, "notes" => $textid['id'] + " has been deleted"));
+              }
               break;
            default:
              $parse = parse_parameters();
@@ -449,7 +465,7 @@ function textus_db_get_id($name)
 /**
 *  Update the store
 */
-function textus_db_update_annotation ($userid, $textid, $start, $end, $private, $lang, $text) {
+function textus_db_update_annotation ($userid, $textid, $start, $end, $private, $lang, $text,$id) {
   global $wpdb;
   $updates = $wpdb->update( $wpdb->prefix."textus_annotations", 
      array( 
@@ -460,7 +476,7 @@ function textus_db_update_annotation ($userid, $textid, $start, $end, $private, 
        'language' => $lang,
        'text' => $text
       ),
-      array('textid' => $textid), 
+      array('id' => $id), 
       $format = null, 
       $where_format = null 
   );
