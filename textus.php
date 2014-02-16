@@ -374,6 +374,7 @@ function textus_get_annotations($textid)
      {
          // put the notes into the correct structure
          $annotations[] = array(
+            "id" => $note->id,
             "start" => $note->start, 
             "end" => $note->end, 
             "time" => $note->time, 
@@ -397,7 +398,7 @@ function textus_db_select_annotation($textid)
      return wp_send_json(array("status"=>500, "error"=>"No text id was given"));
   }
   $notes = $wpdb->get_results( 
-   "SELECT start, end, time, userid, private, language, text
+   "SELECT id, start, end, time, userid, private, language, text
     FROM " . $wpdb->prefix . "textus_annotations
     WHERE textid='$textid'"
   );
