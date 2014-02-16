@@ -144,6 +144,7 @@ function textus_get_control()
         if (is_server()) {
                 
          // Load the relevant controller that contains the methods/
+         
          switch($_SERVER['REQUEST_METHOD']) {
            case 'GET':
                $request = new get_text_controller();
@@ -161,15 +162,13 @@ function textus_get_control()
               //@todo get the vars which the textus viewer sets
               
               // returns the new noteid
-
-              //$current_user = wp_get_current_user();
-              /*if (!is_user_logged_in()) {
-                 return_response(array("status" => 403, "note"=>"This user is not logged in"));
-                 break;
-              }*/
-
+              $name = textus_db_get_id($textid['name']);
+               if (!$name) {
+                   var_dump($name);
+                  return_response(array("status" => 403, "note"=>"This user does not exist"));
+              }
               $noteid = textus_insert_annotation(
-                '1', $textid['textid'], 
+                $name, $textid['textid'], 
                 $textid['start'], $textid['end'], 
                 $textid['private'], 
                 $textid['payload']['language'], $textid['payload']['text']
@@ -401,6 +400,27 @@ function textus_db_select_annotation($textid)
    "SELECT start, end, time, userid, private, language, text
     FROM " . $wpdb->prefix . "textus_annotations
     WHERE textid='$textid'"
+  );
+
+   if ($notes) 
+   {
+      return $notes;
+   }
+}
+
+/**
+*   Function to get the annotations from the store
+*/
+function textus_db_get_id($name)
+{
+  global $wpdb;
+  if (!$name) {
+     return wp_send_json(array("status"=>500, "error"=>"No username was given"));
+  }
+  $notes = $wpdb->get_var( 
+   "SELECT ID
+    FROM " . $wpdb->prefix . "users
+    WHERE user_nicename='$name'"
   );
 
    if ($notes) 
