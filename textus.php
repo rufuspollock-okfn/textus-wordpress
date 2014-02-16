@@ -182,15 +182,17 @@ function textus_get_control()
               
               break;
             case 'PUT':
+             
               //@todo get the vars which the textus viewer sets
-              $textid = parse_parameters();
+              $textid = json_decode(file_get_contents("php://input"), TRUE);
               // returns the new noteid
-              break;
-              $noteid = textus_insert_annotation($_POST['id'], $_POST['time'], 
-                $_POST['start'], $_POST['end'], 
-                $_POST['userid'], $_POST['private'], 
-                $_POST['lang'], $_POST['text']
-              );
+              $name = textus_db_get_id($textid['name']);
+              //$userid, $id, $start, $end, $private, $lang, $text, $noteid
+              $noteid = textus_updates_annotation(
+                 $name, $textid['textid'], 
+                $textid['start'], $textid['end'], 
+                $textid['private'], 
+                $textid['payload']['language'], $textid['payload']['text'], $textid['id']);
               
               break;
            default:
@@ -312,8 +314,22 @@ function textus_insert_annotation($userid, $textid, $start, $end, $private, $lan
 *  @return int
 *  Number of rows affected. If 0, then operation has failed
 */
-function textus_updates_annotation($userid, $id, $time, $start, $end, $private, $lang, $text) {
-  $rows = textus_db_insert_annotation($userid, $id, $time, $start, $end, $private, $lang, $text);
+function textus_updates_annotation($userid, $id, $start, $end, $private, $lang, $text, $noteid) {
+  $rows = textus_db_update_annotation($userid, $id, $start, $end, $private, $lang, $text, $noteid);
+  if ($rows)
+  {
+    return $rows;
+  }
+}
+
+/**
+*  Function to update the notes into the store
+*
+*  @return int
+*  Number of rows affected. If 0, then operation has failed
+*/
+function textus_delete_annotation($noteid) {
+  $rows = textus_db_delete_annotation($noteid);
   if ($rows)
   {
     return $rows;
@@ -410,7 +426,7 @@ function textus_db_select_annotation($textid)
 }
 
 /**
-*   Function to get the annotations from the store
+*   Function to get user id from the given "nice_name"
 */
 function textus_db_get_id($name)
 {
@@ -428,6 +444,41 @@ function textus_db_get_id($name)
    {
       return $notes;
    }
+}
+
+/**
+*  Update the store
+*/
+function textus_db_update_annotation ($userid, $textid, $start, $end, $private, $lang, $text) {
+  global $wpdb;
+  $updates = $wpdb->update( $wpdb->prefix."textus_annotations", 
+     array( 
+       'start' => $start, 
+       'end' => $end, 
+       'userid' => $userid,
+       'private' => $private,
+       'language' => $lang,
+       'text' => $text
+      ),
+      array('textid' => $textid), 
+      $format = null, 
+      $where_format = null 
+  );
+  if ($updates) {
+     return $updates;
+  }
+}
+
+function textus_db_delete_annotation ($noteid) {
+  global $wpdb;
+  $delete = $wpdb->delete( $wpdb->prefix."textus_annotations", 
+      array('id' => $noteid), 
+      $format = null, 
+      $where_format = null 
+  );
+  if ($delete) {
+     return $delete;
+  }
 }
 
 ?>
