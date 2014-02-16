@@ -27,6 +27,7 @@ The API format is JSON.
 
 POST
 Request:
+<code>
 {
  "textid": integer of the text id being retrieved, 
  "start":integer of the start co-ordinate, 
@@ -38,16 +39,20 @@ Request:
   }, 
   "name": String. The public name of the account. 
 }
+</code>
 Response
+<code>
 {
   "status": Integer. HTTP Status code. 200 for success.
    "note" : String. Description.
-
+}
+</code>
 GET
 
 Request: ?text=1&type=annotation
 
 Response
+<code>
 {
 
     "status": Integer. HTTP Status code,
@@ -66,4 +71,33 @@ Response
     ]
 
 }
+</code>
 
+PUT
+
+Request
+
+<code>
+{
+ "textid": integer of the text id being retrieved,
+ "start": integer of the start co-ordinate,
+ "end": integer of the end co-ordinate,
+ "private": either "true" or "false". Must be a string,
+ "payload":
+ {
+  "language": String. Language code for the note,
+  "text": String. The updated text
+ }, 
+ "name": String. The public name of the account.
+ "id" :  Integer
+}
+</code>
+
+Response
+
+<code>
+{
+  "status": Integer. HTTP Status code. 200 for success.
+   "note" : String. Description.
+}
+</code>
