@@ -157,20 +157,26 @@ function textus_get_control()
                 }
                 break;
             case 'POST':
-              //$post = file_get_contents("php://input");
               $textid = json_decode(file_get_contents("php://input"), TRUE);
               //@todo get the vars which the textus viewer sets
-              //$textid = parse_parameters($post);
               
               // returns the new noteid
-              $noteid = textus_insert_annotation($textid['time'], 
+
+              //$current_user = wp_get_current_user();
+              /*if (!is_user_logged_in()) {
+                 return_response(array("status" => 403, "note"=>"This user is not logged in"));
+                 break;
+              }*/
+
+              $noteid = textus_insert_annotation(
+                '1', $textid['textid'], 
                 $textid['start'], $textid['end'], 
-                $textid['userid'], $textid['private'], 
-                $textid['payload']['lang'], $textid['payload']['text']
+                $textid['private'], 
+                $textid['payload']['language'], $textid['payload']['text']
               );
 
               if (intval($noteid) > 0) {
-                 return_response(array("status" => 200, "note"=>"The note has been stored"));
+                 return_response(array("status" => 200, "note"=>"The note has been stored" + intval($noteid)));
               } else {
                  return_response(array("status" => 403, "note"=>"The note could not updated"));
               }
@@ -180,7 +186,7 @@ function textus_get_control()
               //@todo get the vars which the textus viewer sets
               $textid = parse_parameters();
               // returns the new noteid
-break;
+              break;
               $noteid = textus_insert_annotation($_POST['id'], $_POST['time'], 
                 $_POST['start'], $_POST['end'], 
                 $_POST['userid'], $_POST['private'], 
@@ -215,7 +221,6 @@ function parse_parameters($data)
              return $_GET;
           }
         } else {
-                print "data $data \n";
                 // Otherwise it is POST, PUT or DELETE.
                 // At the moment, we only deal with JSON
                 //$data = file_get_contents("php://input");
@@ -296,8 +301,8 @@ function textus_install() {
 *  @return int
 *  Number of rows affected. If 0, then operation has failed
 */
-function textus_insert_annotation($start, $end, $userid, $private, $lang, $text) {
-  $rows = textus_db_insert_annotation($start, $end, $userid, $private, $lang, $text);
+function textus_insert_annotation($userid, $textid, $start, $end, $private, $lang, $text) {
+  $rows = textus_db_insert_annotation($userid, $textid, $start, $end, $private, $lang, $text);
   return ($rows) ? $rows : false;
  
 }
@@ -308,8 +313,8 @@ function textus_insert_annotation($start, $end, $userid, $private, $lang, $text)
 *  @return int
 *  Number of rows affected. If 0, then operation has failed
 */
-function textus_updates_annotation($id, $time, $start, $end, $userid, $private, $lang, $text) {
-  $rows = textus_db_insert_annotation($id, $time, $start, $end, $userid, $private, $lang, $text);
+function textus_updates_annotation($userid, $id, $time, $start, $end, $private, $lang, $text) {
+  $rows = textus_db_insert_annotation($userid, $id, $time, $start, $end, $private, $lang, $text);
   if ($rows)
   {
     return $rows;
@@ -323,7 +328,7 @@ function textus_updates_annotation($id, $time, $start, $end, $userid, $private, 
 *  return int
 *  returns the number of rows affected. Should only be 1. If not, the calling function needs to throw an error.
 */
-function textus_db_insert_annotation($start, $end, $userid, $private, $lang, $text, $textid)
+function textus_db_insert_annotation($userid, $textid, $start, $end, $private, $lang, $text)
 {
     global $wpdb;
 
