@@ -20,6 +20,10 @@ add_shortcode('textus', 'textus_shortcode');
 // function to create annotation table
 register_activation_hook( __FILE__, 'textus_install' );
 
+// Add initialization and activation hooks
+//register_activation_hook("$dir/textus.php", 'textus_activation');
+//register_deactivation_hook("$dir/textus.php", 'textus_deactivation');
+
 /* Wordpress Textus functions */
 
 /**
@@ -55,6 +59,8 @@ function register_textus()
     );
     // register the post type
     register_post_type( 'textus', $args );
+    //register the rewrite rules
+    add_filter('rewrite_rules_array', 'textus_rewrites');
 }
 
 /**
@@ -159,58 +165,67 @@ function textus_get_control()
                 break;
             case 'POST':
               $textid = json_decode(file_get_contents("php://input"), TRUE);
-              //@todo get the vars which the textus viewer sets
-              
-              // returns the new noteid
-              $name = textus_db_get_id($textid['name']);
-               if (!$name) {
-                   var_dump($name);
-                  return_response(array("status" => 403, "note"=>"This user does not exist"));
-              }
-              $noteid = textus_insert_annotation(
-                $name, $textid['textid'], 
-                $textid['start'], $textid['end'], 
-                $textid['private'], 
-                $textid['payload']['language'], $textid['payload']['text']
-              );
+              if (isset($textid['textid'])) {
+                if ( ! is_user_logged_in()) {
+                  return_response(array("status" => 403, "note"=>"This user is not logged in"));
+                } else {
+		      $current_user = wp_get_current_user();
+		      $noteid = textus_insert_annotation(
+		        $current_user->ID, $textid['textid'], 
+		        $textid['start'], $textid['end'], 
+		        $textid['private'], 
+		        $textid['payload']['language'], $textid['payload']['text']
+		      );
 
-              if (intval($noteid) > 0) {
-                 return_response(array("status" => 200, "note"=>"The note has been stored" + intval($noteid)));
+		      if (intval($noteid) > 0) {
+		         return_response(array("status" => 200, "note"=>"The note has been stored" + intval($noteid)));
+		      } else {
+		         return_response(array("status" => 403, "note"=>"The note could not updated"));
+		      }
+		      
+		      break;
+                }
               } else {
-                 return_response(array("status" => 403, "note"=>"The note could not updated"));
+                 break;
               }
-              
-              break;
             case 'PUT':
-             
-              //@todo get the vars which the textus viewer sets
               $textid = json_decode(file_get_contents("php://input"), TRUE);
-              // returns the new noteid
-              $name = textus_db_get_id($textid['name']);
-              //$userid, $id, $start, $end, $private, $lang, $text, $noteid
-
-              $noteid = textus_updates_annotation(
-                 $name, $textid['textid'], 
-                $textid['start'], $textid['end'], 
-                $textid['private'], 
-                $textid['payload']['language'], $textid['payload']['text'], $textid['id']);
-                            
-              if (intval($noteid) > 0 ) {
-                  return_response(array("status"=> 200, "notes" => $textid['id'] + " has been updated"));
+               print "PUT";
+              if (isset($textid['textid'])) {
+		      // returns the new noteid
+               if ( ! is_user_logged_in()) {
+                 return_response(array("status" => 403, "note"=>"This user is not logged in"));
+               } else {
+                      $current_user = wp_get_current_user();
+		      $noteid = textus_updates_annotation(
+		        $current_user->ID, $textid['textid'], 
+		        $textid['start'], $textid['end'], 
+		        $textid['private'], 
+		        $textid['payload']['language'], $textid['payload']['text'], $textid['id']);
+		                    
+		      if (intval($noteid) > 0 ) {
+		          return_response(array("status"=> 200, "notes" => $textid['id'] + " has been updated"));
+		      }
+		      break;
+                 }
+              } else {
+                 break;
               }
-              break;
             case 'DELETE':
              
               //@todo get the vars which the textus viewer sets
               $textid = json_decode(file_get_contents("php://input"), TRUE);
-              // returns the new noteid
-              $name = textus_db_get_id($textid['name']);
-              //$userid, $id, $start, $end, $private, $lang, $text, $noteid
-              $noteid = textus_delete_annotation($textid['id']);
-              if (intval($noteid) > 0 ) {
-                  return_response(array("status"=> 200, "notes" => $textid['id'] + " has been deleted"));
-              }
-              break;
+              if ( ! is_user_logged_in()) {
+                 return_response(array("status" => 403, "note"=>"This user is not logged in"));
+              } else {
+                      $current_user = wp_get_current_user();
+		      $noteid = textus_delete_annotation($textid['id']);
+		      if (intval($noteid) > 0 ) {
+		          return_response(array("status"=> 200, "notes" => $textid['id'] + " has been deleted"));
+		      }
+		      break;
+                }
+
            default:
              $parse = parse_parameters();
              if ($parse['action'] == 'json') {
@@ -364,7 +379,7 @@ function textus_db_insert_annotation($userid, $textid, $start, $end, $private, $
     global $wpdb;
 
     $table_name = $wpdb->prefix . "textus_annotations"; 
-
+   print "user is $userid";
    $rows_affected = $wpdb->insert( $table_name, 
      array( 
        'textid' => $textid,
@@ -496,5 +511,35 @@ function textus_db_delete_annotation ($noteid) {
      return $delete;
   }
 }
+
+/* Rewrite rules */
+function textus_activation() {
+  // Add the rewrite rule on activation
+  global $wp_rewrite;
+  add_filter('rewrite_rules_array', 'textus_rewrites');
+  $wp_rewrite->flush_rules();
+}
+
+function textus_deactivation() {
+  // Remove the rewrite rule on deactivation
+  global $wp_rewrite;
+  $wp_rewrite->flush_rules();
+}
+
+function textus_rewrites($wp_rules) {
+  /*$base = get_option('textus_base', 'api');
+  if (empty($base)) {
+    return $wp_rules;
+  }*/
+  // hardcoded but we need to make this configurable
+  $base = 'textus.php';
+  $textus_rules = array(
+    "$base\$" => 'index.php?text=$matches[1]',
+    "$base/(.+)\$" => 'index.php?text=$matches[1]&type=$matches[2]'
+  );
+  return array_merge($textus_rules, $wp_rules);
+}
+
+
 
 ?>
