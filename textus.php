@@ -126,11 +126,12 @@ function is_server()
             break;
           case 'POST':
           case 'PUT':
+          case 'DELETE':
             //needs testing against the textus code
             $server = true;
             break;
           default:
-            wp_send_json(array("error" =>"Term not supported"));
+            wp_send_json(array("error" =>"Method not supported"));
             break;
         }
         return $server;
