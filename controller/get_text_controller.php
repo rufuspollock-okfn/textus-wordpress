@@ -5,8 +5,6 @@
  */
 
 include __DIR__.'/../encode.php';
-include __DIR__.'/../dao.php';
-
 include __DIR__.'/../storage/filesys.inc';
 
 class get_text_controller {
@@ -92,7 +90,7 @@ class get_text_controller {
 		//need some error handling
 		if ($textid) {
 			// If the textid isn't empty, then get the complete file.
-			return $fs->ol_get_file($textid.'-typography.json');
+			return $fs->ol_get_file($textid.'-typography.txt');
 		}
 	}
 }
