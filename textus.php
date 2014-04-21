@@ -80,20 +80,53 @@ function textus_shortcode( $atts ) {
         ), 
       $atts)
     );
-    
-    $rawtext = textus_get_text($id, 'text');   
-    $rawjson = textus_get_text($id, 'json');
+    $rawtext = "/wordpress/wp-content/uploads/".$atts['id']."-text.txt";   
+    $rawjson = "/wordpress/wp-content/uploads/".$atts['id']."-typography.json";
     // return the text with the call the the Javascript location
-    return '<div id="raw">
-'.$rawtext.'
-</div>
-<script src="/textus-viewer/js/textus.js"></script>
+    return '<div id=\'textViewDiv\'></div>
+<!-- Textus JS dependencies -->
+<script src="http://okfnlabs.org/textus-viewer/vendor/jquery-1.7.2.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/vendor/jquery.ui-1.8.22.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/vendor/underscore-1.3.3.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/vendor/backbone-0.9.2.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/vendor/backbone.forms-0.10.0.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/vendor/bootstrap.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/vendor/bootstrap.modal-1.4.0.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/vendor/jquery.ui.colorPicker.js"></script>
+<!-- Textus JS viewer -->
+<script src="http://okfnlabs.org/textus-viewer/js/textus.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/js/model.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/js/annotation.js"></script>
+<script src="http://okfnlabs.org/textus-viewer/js/viewer.js"></script>
 <script type="text/javascript">
-var textusTypography = "'.$rawjson.'";
-var textUrl = "'.$rawtext.'";
-var apiUrl = "";
 var currentUser = { id : '.get_current_user_id().'};
-viewer = new Viewer(textUrl, textusTypography, apiUrl, currentUser);
+jQuery(document).ready(function() {
+  // Create a Text object with some fixture data
+  var text = new Textus.Model.Text({
+    // id is needed if new annotations will be allowed
+    id: \'text-1\',
+    textUrl: "'.$rawtext.'",
+    typographyUrl: "'.$rawjson.'",
+    annotationsUrl: "http://localhost/wordpress/?text='.$atts['id'].'&type=annotation"
+  });
+  // Load the text
+  text.fetch(function(err) {
+    // you could check the err if you want to be sure text has loaded ok
+
+    // set up the viewer
+    var viewer = new Textus.Viewer({
+      el: $(\'.textus-viewer-here\'),
+      text: text,
+      router: null,
+      user: {
+        // example has id:\'bob\' but Wordpress uses numerics.
+        id: \''.get_current_user_id().'\'
+      }
+    });
+    // and now render it
+    viewer.render();
+  });
+});
 </script>
 </pre>';
 } 
