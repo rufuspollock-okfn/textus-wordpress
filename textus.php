@@ -87,7 +87,7 @@ function textus_shortcode( $atts ) {
     return '<div id="raw">
 '.$rawtext.'
 </div>
-<script src="/vendor/textus-viewer.js"></script>
+<script src="/textus-viewer/js/textus.js"></script>
 <script type="text/javascript">
 var textusTypography = "'.$rawjson.'";
 var textUrl = "'.$rawtext.'";
