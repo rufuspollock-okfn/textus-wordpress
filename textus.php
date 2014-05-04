@@ -457,9 +457,9 @@ function textus_get_annotations($textid)
           $note_user = get_user_by('id', $note->userid);
          // put the notes into the correct structure
          $annotations[] = array(
-            "id" => $note->id,
-            "start" => $note->start, 
-            "end" => $note->end, 
+            "id" => intval($note->id),
+            "start" => intval($note->start), 
+            "end" => intval($note->end), 
             "type" => "textus:comment",
             "userid" => $note_user->user_nicename,
             "time" => $note->time, 
