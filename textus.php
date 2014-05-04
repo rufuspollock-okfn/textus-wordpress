@@ -191,7 +191,8 @@ function textus_get_control()
                //$parse = parse_parameters();
                if ( $_GET['type'] == 'annotation' ) {
                   if (intval($_GET['text'])) {
-                     return_response(array("status"=>200, "notes"=>textus_get_annotations($_GET['text'])));
+                     return_response(textus_get_annotations($_GET['text']));
+                     #return_response(array("status"=>200, "notes"=>textus_get_annotations($_GET['text'])));
                   } else {
                      return_response(array("status" => 403, "error"=>"You need to specify a text"));
                   }
@@ -453,11 +454,14 @@ function textus_get_annotations($textid)
    } else {
      foreach ($notes as $note)
      {
+          $note_user = get_user_by('id', $note->userid);
          // put the notes into the correct structure
          $annotations[] = array(
             "id" => $note->id,
             "start" => $note->start, 
             "end" => $note->end, 
+            "type" => "textus:comment",
+            "userid" => $note_user->user_nicename,
             "time" => $note->time, 
             "private" => $note->private, 
             "payload" => array(
