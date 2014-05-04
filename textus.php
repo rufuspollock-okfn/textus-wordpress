@@ -83,6 +83,7 @@ function textus_shortcode( $atts ) {
     $rawtext = "/wordpress/wp-content/uploads/".$atts['id']."-text.txt";   
     $rawjson = "/wordpress/wp-content/uploads/".$atts['id']."-typography.json";
     $notes_id = split('/',$atts['id']);
+
     // return the text with the call the the Javascript location
     return '<div id=\'textViewDiv\'></div>
 <!-- Textus JS dependencies -->
