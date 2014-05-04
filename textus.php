@@ -461,11 +461,11 @@ function textus_get_annotations($textid)
             "start" => intval($note->start), 
             "end" => intval($note->end), 
             "type" => "textus:comment",
-            "userid" => $note_user->user_nicename,
-            "time" => $note->time, 
-            "private" => $note->private, 
+            "user" => $note_user->user_nicename,
+            //"time" => $note->time, 
+            //"private" => $note->private, 
             "payload" => array(
-               "language" => $note->language, 
+               //"language" => $note->language, 
                "text" => $note->text)
             );
      }
