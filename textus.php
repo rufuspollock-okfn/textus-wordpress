@@ -109,7 +109,7 @@ jQuery(document).ready(function() {
     id: \'text-1\',
     textUrl: "'.$rawtext.'",
     typographyUrl: "'.$rawjson.'",
-    annotationsUrl: "http://'.$_SERVER['HTTP_HOST'].'/?text='.$notes_id[2].'&type=annotation"
+    annotationsUrl: "/?text='.intval($notes_id[2]).'&type=annotation"
   });
   // Load the text
   text.fetch(function(err) {
