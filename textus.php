@@ -81,7 +81,7 @@ function textus_shortcode( $atts ) {
       $atts)
     );
     $rawtext = "/wp-content/uploads/".$atts['id']."-text.txt";   
-    $rawjson = "/wp-content/uploads/".$atts['id']."-typography.json";
+    $rawjson = "/wp-content/uploads/".$atts['id']."-typography.txt";
     $notes_id = split('/',$atts['id']);
 
     // return the text with the call the the Javascript location
