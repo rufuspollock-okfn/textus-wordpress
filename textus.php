@@ -80,8 +80,8 @@ function textus_shortcode( $atts ) {
         ), 
       $atts)
     );
-    $rawtext = "/wordpress/wp-content/uploads/".$atts['id']."-text.txt";   
-    $rawjson = "/wordpress/wp-content/uploads/".$atts['id']."-typography.json";
+    $rawtext = "/wp-content/uploads/".$atts['id']."-text.txt";   
+    $rawjson = "/wp-content/uploads/".$atts['id']."-typography.json";
     $notes_id = split('/',$atts['id']);
 
     // return the text with the call the the Javascript location
@@ -109,7 +109,7 @@ jQuery(document).ready(function() {
     id: \'text-1\',
     textUrl: "'.$rawtext.'",
     typographyUrl: "'.$rawjson.'",
-    annotationsUrl: "http://localhost/wordpress/?text='.$notes_id[1].'&type=annotation"
+    annotationsUrl: "http://'.$_SERVER['HTTP_HOST'].'/?text='.$notes_id[2].'&type=annotation"
   });
   // Load the text
   text.fetch(function(err) {
